@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: universal-ai-dashboard
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run advanced_security_dashboard.py --server.port $PORT --server.address 0.0.0.0
