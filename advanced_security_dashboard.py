@@ -203,7 +203,92 @@ except Exception as e:
     st.error(f"Error reading file: {e}")
 
     st.stop()
+# ==========================================================
+# PERFORMANCE OPTIMIZATION FOR LARGE FILES
+# ==========================================================
 
+MAX_ROWS = 100000
+
+try:
+
+    total_rows = len(df)
+
+    if total_rows > MAX_ROWS:
+
+        st.warning(
+            f"⚡ Large dataset detected ({total_rows:,} rows). "
+            f"Using a sample of {MAX_ROWS:,} rows for faster dashboard generation."
+        )
+
+        df = df.sample(
+            n=MAX_ROWS,
+            random_state=42
+        )
+
+except:
+    pass
+
+# Reduce memory usage
+
+for col in df.select_dtypes(include=["int64"]).columns:
+
+    try:
+        df[col] = pd.to_numeric(
+            df[col],
+            downcast="integer"
+        )
+    except:
+        pass
+
+for col in df.select_dtypes(include=["float64"]).columns:
+
+    try:
+        df[col] = pd.to_numeric(
+            df[col],
+            downcast="float"
+        )
+    except:
+        pass
+
+# Remove duplicate rows
+
+try:
+
+    before = len(df)
+
+    df = df.drop_duplicates()
+
+    after = len(df)
+
+    if before != after:
+
+        st.info(
+            f"Removed {before-after:,} duplicate rows."
+        )
+
+except:
+    pass
+
+# Fill missing values
+
+try:
+
+    for col in df.columns:
+
+        if df[col].dtype == "object":
+
+            df[col] = df[col].fillna("Unknown")
+
+        else:
+
+            df[col] = df[col].fillna(0)
+
+except:
+    pass
+
+st.success(
+    f"✅ Dataset ready for analysis ({len(df):,} rows loaded)"
+)
 # ==========================================================
 # CLEAN COLUMNS
 # ==========================================================
@@ -482,7 +567,7 @@ st.divider()
 # CORRELATION HEATMAP
 # ==========================================================
 
-if len(numeric_cols) >= 2:
+if len(numeric_cols) >= 2 and len(numeric_cols) <= 15:
 
     st.subheader("🔥 Correlation Heatmap")
 
